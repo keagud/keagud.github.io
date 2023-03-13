@@ -1,0 +1,5 @@
+beautifulsoup4==4.11.2
+bs4==0.0.1
+invoke==2.0.0
+Markdown==3.4.1
+soupsieve==2.4
