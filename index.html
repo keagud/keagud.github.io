@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="css/index-page-base.css">
   </head>
   <body>
-    <h1>implicit | computer</h1>
-    <p><i><div id="quote"></div></i></p>
+    <h1>Implicit Computer</h1>
+    <p><i id="quote"></i></p>
     <br>
 
     <p>Hello</p>
@@ -26,6 +26,22 @@
     <br>
     <p>made with <a href="https://github.com/edwardtufte/tufte-css">tufte css</a></p>
     
-    <script src="script.js"></script>
+    <script>
+
+
+  const quotesJson = require('./quotes.json');
+
+
+  const quoteElement = document.querySelector("#quote");
+  quoteElement.textContent = (() => {
+
+  const quotesArr = quotesJson.quotes;
+  let index = Math.floor(Math.random() * (quotesArr.length));
+  
+  console.log(quotesArr[index]);
+  return quotesArr[index];
+
+})();
+    </script>
      </body>
 </html>

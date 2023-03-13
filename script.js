@@ -1,5 +1,5 @@
 
-const quotesJson = require('./quotes.json')
+const quotesJson = require('./quotes.json');
 
 
 document.querySelector("#quote").textContent = (() => {
@@ -7,6 +7,7 @@ document.querySelector("#quote").textContent = (() => {
   const quotesArr = quotesJson.quotes;
   const index = Math.floor(Math.random() * (quotesArr.length));
   
-  return quotesArr[index]
+  console.log(quotesArr[index]);
+  return quotesArr[index];
 
 })();
