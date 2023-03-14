@@ -1,0 +1,27 @@
+name: Prepare Site
+run-name: Preparing site
+on:
+  push:
+    branches: ["master"]
+jobs:
+  Run-Build-Scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo code
+        uses: actions/checkout@v3
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+         python-version: '3.x' 
+      - name: Install dependencies
+        run: |
+         python -m pip install --upgrade pip
+         pip install -r requirements.txt
+         pip install markdown
+         pip install invoke
+         pip install bs4
+      - name: Run build actions
+        run: 
+          invoke quote
+       
+  
