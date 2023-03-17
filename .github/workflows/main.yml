@@ -23,6 +23,7 @@ jobs:
       - name: Install xelatex and dependencies
         run: | 
           sudo apt install -y  texlive-xetex
+          sudo apt install -y texlive-latex-base
       - name: Run build actions
         run: |
           ls -a
