@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <title>
+   Welcome to my web site!
+  </title>
+  <link href="../et-book/et-book.css" rel="stylesheet"/>
+  <link href="../css/index-page-base.css" rel="stylesheet"/>
+  <link href="../css/tufte.css" rel="stylesheet"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+ </head>
+ <body>
+  <h1>
+   <a href="https://keagud.github.io">
+    keagud dot github dot io
+   </a>
+  </h1>
+  <p>
+   <i id="quote">
+   </i>
+  </p>
+  <br/>
+  <h1>
+   Welcome to my web site!
+  </h1>
+  <section>
+   Hello! I'm Keaton and this is my personal website. I hope you like it; feel free to leave a comment if you don't.
+   <label class="margin-toggle" for="mn-demo">
+    &oplus;
+   </label>
+   <input class="margin-toggle" id="mn-demo" type="checkbox"/>
+   <span class="marginnote">
+    That was a trick. There are no comments. Society has progressed beyond the need for comments.
+   </span>
+  </section>
+  <script>
+   const quotesJson = (()=>{
+            let reader = new XMLHttpRequest();
+            reader.open("GET", "../quotes.json", false);
+            reader.send();
+            return JSON.parse(reader.responseText);
+          })();
+
+          console.log(quotesJson);
+
+      const quoteElement = document.querySelector("#quote");
+
+      quoteElement.textContent = (() => {
+
+      const quotesArr = quotesJson["quotes"];
+
+      console.table(quotesArr);
+      let index = Math.floor(Math.random() * (quotesArr.length));
+      console.log(quotesArr[index]);
+      return quotesArr[index];
+
+    })();
+  </script>
+ </body>
+</html>

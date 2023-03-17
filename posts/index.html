@@ -1,28 +1,44 @@
-“
 <!DOCTYPE html>
-<head>
- <meta charset="utf-8"/>
- <title>
-  A Test Post
- </title>
- <link href="../css/tufte.css" rel="stylesheet"/>
- <link href="../css/layout.css" rel="stylesheet"/>
- <link href="../et-book" rel="stylesheet"/>
-</head>
-<body>
- <div class="home-button">
-  <h1>
-   <a href="../index.html">
-    home
-   </a>
-   <h1>
-   </h1>
-  </h1>
- </div>
- <h1>
-  a test post
- </h1>
- <p>
-  pls ignore
- </p>
-</body>
+    <html lang = "en">
+      <head>
+        <meta charset="utf-8">
+        <title>Posts</title>
+        <link rel="stylesheet" href="../et-book/et-book.css">
+        <link rel="stylesheet" href="../css/index-page-base.css">
+        <link rel="stylesheet" href="../css/tufte.css">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+      </head>
+
+      <body>
+        <h1><a href = "https://keagud.github.io">keagud dot github dot io</a></h1>
+        <p><i id="quote"></i></p>
+        <br>
+
+        <ul><li><a href = "./welcome.html">Welcome to my web site!</a></li></ul>
+        <script>
+          const quotesJson = (()=>{
+            let reader = new XMLHttpRequest();
+            reader.open("GET", "../quotes.json", false);
+            reader.send();
+            return JSON.parse(reader.responseText);
+          })();
+
+          console.log(quotesJson);
+
+      const quoteElement = document.querySelector("#quote");
+
+      quoteElement.textContent = (() => {
+
+      const quotesArr = quotesJson["quotes"];
+
+      console.table(quotesArr);
+      let index = Math.floor(Math.random() * (quotesArr.length));
+      console.log(quotesArr[index]);
+      return quotesArr[index];
+
+    })();
+        </script>
+         </body>
+    </html>
+    
