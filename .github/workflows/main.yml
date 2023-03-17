@@ -10,7 +10,7 @@ jobs:
       - name: Check out repo code
         uses: actions/checkout@v3
         with: 
-          submodules: 'true'
+          submodules: recursive
           
       - name: Set up python
         uses: actions/setup-python@v4
@@ -25,6 +25,7 @@ jobs:
           sudo apt install -y  texlive-xetex
       - name: Run build actions
         run: |
+          ls -a
           invoke quote
           invoke postall --replace
           invoke index
