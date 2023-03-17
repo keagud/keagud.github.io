@@ -24,6 +24,7 @@ jobs:
         run: | 
           sudo apt install -y  texlive-xetex
           sudo apt install -y texlive-latex-base
+          audo apt install -y texlive-fonts-extra
       - name: Run build actions
         run: |
           ls -a
