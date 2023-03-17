@@ -27,10 +27,10 @@ jobs:
           sudo apt install -y texlive-fonts-extra
       - name: Run build actions
         run: |
-          ls -a
           invoke quote
           invoke postall --replace
           invoke index
           cd Resume && python build.py
+          cp resume.pdf ..
        
   
