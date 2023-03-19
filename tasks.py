@@ -72,7 +72,6 @@ def _format_page_content(page_title: str, page_content: str):
         <meta charset="utf-8">
         <title>{page_title}</title>
         <link rel="stylesheet" href="../et-book/et-book.css">
-        <link rel="stylesheet" href="../css/index-page-base.css">
         <link rel="stylesheet" href="../css/tufte.css">
 
         <meta name="viewport" content="width=device-width, initial-scale=1">
