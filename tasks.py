@@ -1,39 +1,49 @@
 import json
-import os
 from os.path import relpath
 
 from bs4 import BeautifulSoup as bs
-
+from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 import markdown
 from invoke import task
 from pprint import pprint
 from functools import cache
+from slugify import slugify
+import datetime
+
+from typing import NamedTuple
 
 
-def _get_html_components(html_text: str):
-    soup = bs(html_text, "html.parser")
+class PostData(NamedTuple):
+    title: str
+    date: datetime.date
+    content: str
+    filename: str
 
-    body_tag = soup.body
-    if body_tag is None:
-        body_tag = soup
 
-    body = "\n".join(str(txt) for txt in body_tag.contents)
+@task
+def newpost(c, title: str):
+    newpost_template_lines = [
+        r'{% extends "base.html" %}',
+        r"{% block title %}" + title + "{% endblock %}",
+        r"{% block date %}" + datetime.date.today().isoformat() + r"{% endblock %}",
+        r"{% block content %}",
+        r"<p>\n</p>",
+        r"{% endblock content %}",
+    ]
 
-    title = soup.find("title")
+    title_filename = f"{slugify(title.strip(), allow_unicode=False)}.md"
 
-    if title is not None:
-        title = title.text.strip()
-    elif (h1 := soup.find("h1")) is not None:
-        title = h1.text.strip()
-    else:
-        title = ""
+    new_filepath = find_root().joinpath("posts-raw", title_filename)
 
-    return (title, body)
+    assert not new_filepath.exists()
+
+    with open(new_filepath, "w") as outfile:
+        outfile.writelines([line + "\n" for line in newpost_template_lines])
 
 
 @cache
-def _find_root():
+def find_root():
     current_dir = Path(".").expanduser().resolve()
 
     def home_or_root(path: Path):
@@ -49,180 +59,96 @@ def _find_root():
             return current_dir.resolve().absolute()
         current_dir = current_dir.joinpath("..")
 
-
     raise FileNotFoundError
 
 
 @cache
 def _post_location():
-    p = _find_root().joinpath('posts').resolve()
+    p = find_root().joinpath("posts").resolve()
     print(p)
 
-    rel =  Path(relpath(p, _find_root())).resolve().absolute()
-    print(rel)
-
-def _format_page_content(page_title: str, page_content: str):
-
-
-
-    html_boilerplate_header = rf"""
-    <!DOCTYPE html>
-    <html lang = "en">
-      <head>
-        <meta charset="utf-8">
-        <title>{page_title}</title>
-        <link rel="stylesheet" href="../et-book/et-book.css">
-        <link rel="stylesheet" href="../css/tufte.css">
-
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-      </head>
-  """.strip()
-
-    html_boilerplate_body = (
-        rf"""
-      <body>
-        <h1><a href = "https://keagud.github.io">keagud dot github dot io</a></h1>
-        <p><i id="quote"></i></p>
-        <br>
-
-        """
-        + page_content
-        + r"""
-        <script>
-          const quotesJson = (()=>{
-            let reader = new XMLHttpRequest();
-            reader.open("GET", """
-        + '"../quotes.json"'
-        + """, false);
-            reader.send();
-            return JSON.parse(reader.responseText);
-          })();
-
-          console.log(quotesJson);
-
-      const quoteElement = document.querySelector("#quote");
-
-      quoteElement.textContent = (() => {
-
-      const quotesArr = quotesJson["quotes"];
-
-      console.table(quotesArr);
-      let index = Math.floor(Math.random() * (quotesArr.length));
-      console.log(quotesArr[index]);
-      return quotesArr[index];
-
-    })();
-        </script>
-         </body>
-    </html>
-    """
-    )
-
-    return "\n".join((html_boilerplate_header, html_boilerplate_body))
+    rel = Path(relpath(p, find_root())).resolve().absolute()
+    return rel
 
 
 @task
 def quote(c):
     with open("quotes.txt", "r") as infile:
-        lines = [line.strip() for line in infile.readlines() if not line or not line.isspace()]
+        lines = [
+            line.strip()
+            for line in infile.readlines()
+            if not line or not line.isspace()
+        ]
 
     with open("quotes.json", "w") as outfile:
-        json.dump({"quotes": lines}, outfile, indent=4 )
+        json.dump({"quotes": lines}, outfile, indent=4)
 
 
-def _post(input_filename: str, replace: bool = False, pretty: bool = True):
-    input_filename = os.path.normpath(input_filename)
-    with open(input_filename, "r") as infile:
-        md_content = "\n".join([line.strip() for line in infile.readlines()])
-
-    html_content = markdown.markdown(md_content)
-
-    pprint(html_content)
-
-    components = _get_html_components(html_content)
-
-    full_html = _format_page_content(*components )
-
-    if pretty:
-        soup = bs(full_html, features="html.parser")
-        full_html = soup.prettify(formatter="html")
-
-    base_name, _ = os.path.splitext(os.path.basename(input_filename))
-
-    target_name = f"./posts/{base_name}.html"
-
-    if os.path.exists(target_name) and not replace:
-        raise FileExistsError
-
-    print(full_html)
-
-    with open(target_name, "w") as post_file:
-        post_file.write(full_html)
+def get_meta(content: str):
+    content_lines = content.strip().split("\n")
+    return (content_lines[1], content_lines[2])
 
 
-def _make_index_html(target_dir: str | None = None):
+def make_index(posts: list[PostData]):
+    posts.sort(key=lambda x: x.date)
 
-    if target_dir is None:
-        target_dir = _find_root().joinpath("posts").as_posix()
-
-    index_items = []
-
-    for file in Path(target_dir).glob("*.html"):
-        if file.name == "index.html":
-            continue
-
-        with open(file, "r") as post_file:
-            soup = bs(post_file.read(), "html.parser")
-
-        post_title = soup.find("title")
-
-        if post_title is None:
-            continue
-
-        post_title = post_title.text.strip()
-
-        index_items.append((post_title, file.name))
-    pprint(index_items)
-
-    links_list = "\n".join(
-        [f'<li><a href = "./{link}">{title}</a></li>' for title, link in index_items]
+    templates_path = find_root().joinpath("templates")
+    environment = Environment(
+        loader=FileSystemLoader([find_root().as_posix(), templates_path])
     )
 
-    return _format_page_content("Posts", rf"<ul>{links_list}</ul>" )
+    index_template = environment.get_template("posts_index_template.html")
+    index_content = strip_html(index_template.render(posts_index=posts).strip())
+
+    with open(find_root().joinpath("posts", "index.html"), "w") as outfile:
+        outfile.write(index_content)
+
+
+def strip_html(html: str):
+    lines = html.split("\n")
+    return "\n".join([line for line in lines if line])
 
 
 @task
-def post(c, input_filename: str, replace: bool = True, pretty: bool = True):
-    _post(input_filename, replace=replace, pretty=pretty)
+def convert(c):
+    post_raw_path = find_root().joinpath("posts-raw")
+    post_html_path = find_root().joinpath("posts")
 
+    templates_path = find_root().joinpath("templates")
 
-@task
-def postall(c, target_dir: str = "./posts-md", replace: bool = False):
-    for file in Path(target_dir).glob("*.md"):
-        _post(file.as_posix(), replace=replace)
+    if not post_html_path.exists():
+        post_html_path.mkdir()
 
+    environment = Environment(
+        loader=FileSystemLoader([post_raw_path, find_root().as_posix(), templates_path])
+    )
 
-@task
-def index(c):
-    target_file = _find_root().joinpath("./posts/index.html").as_posix()
+    processed = []
 
-    index_text = _make_index_html()
-
-    with open(target_file, "w") as index_file:
-        index_file.write(index_text)
-
-
-@task
-def clean(c):
-    post_path = _find_root().joinpath("posts")
-
-    for file in post_path.glob("*.html"):
-        if file.name ==  "index.html" or file.is_dir():
+    for raw_md in post_raw_path.glob("*.md"):
+        if not raw_md.is_file:
             continue
-        file.unlink(missing_ok=True)
+        template = environment.get_template(raw_md.name)
+        filled  = template.render(rootpath=relpath(find_root(), start=post_html_path))
 
+        filled = strip_html(filled)
+        filename = f"{raw_md.stem}.html"
+        title, date_str = get_meta(filled)
 
+        post_date = datetime.date.fromisoformat(date_str.strip())
 
+        processed.append(
+            PostData(title=title, content=filled, date=post_date, filename=filename)
+        )
 
+    for post in processed:
+        with open(post_html_path.joinpath(post.filename), "w") as outfile:
+            outfile.write(post.content.strip())
 
+    make_index(processed)
 
+    index_template = environment.get_template("main_index_template.html")
+    main_index_content = strip_html(index_template.render(rootpath="."))
+
+    with open(find_root().joinpath("index.html"), "w") as index_file:
+        index_file.write(main_index_content)
