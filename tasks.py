@@ -1,17 +1,13 @@
-import json
-from os.path import relpath
-
-from bs4 import BeautifulSoup as bs
-from jinja2 import Environment, FileSystemLoader
-from pathlib import Path
-import markdown
-from invoke import task
-from pprint import pprint
-from functools import cache
-from slugify import slugify
 import datetime
-
+import json
+from functools import cache
+from os.path import relpath
+from pathlib import Path
 from typing import NamedTuple
+
+from invoke import task
+from jinja2 import Environment, FileSystemLoader
+from slugify import slugify
 
 
 class PostData(NamedTuple):
@@ -129,7 +125,7 @@ def convert(c):
         if not raw_md.is_file:
             continue
         template = environment.get_template(raw_md.name)
-        filled  = template.render(rootpath=relpath(find_root(), start=post_html_path))
+        filled = template.render(rootpath=relpath(find_root(), start=post_html_path))
 
         filled = strip_html(filled)
         filename = f"{raw_md.stem}.html"
